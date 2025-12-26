@@ -9,8 +9,18 @@ router.post(
   '/register',
   [
     check('name', 'Name is required').notEmpty(),
+
     check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password must be 6+ chars').isLength({ min: 6 })
+
+    check('phone', 'Phone number is required').notEmpty(),
+
+    check('password', 'Password must be at least 6 characters')
+      .isLength({ min: 6 }),
+
+    check('role')
+      .optional()
+      .isIn(['CIVIL', 'BENEVOLE', 'PROTECTION'])
+      .withMessage('Invalid role')
   ],
   authController.register
 );
@@ -37,4 +47,13 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password'); // ✅ remove password
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
 module.exports = router;
